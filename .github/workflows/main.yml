@@ -43,4 +43,4 @@ jobs:
             fi
     - name: Upload files to S3
       run: |
-            aws --endpoint-url=https://kr.object.ncloudstorage.com s3 cp . s3:// cbheo/${{ env.VERSION }} --recursive --exclude "*" --include "*.html" --include "*.css" --include "*.js" --exclude ".github/*" --exclude "aws/*
+            aws --endpoint-url=https://kr.object.ncloudstorage.com s3 cp . s3://cbheo/${{ env.VERSION }} --recursive --exclude "*" --include "*.html" --include "*.css" --include "*.js" --exclude ".github/*" --exclude "aws/*
