@@ -1,0 +1,46 @@
+name: upload to ncp object storage
+
+on:
+  push:
+    branches:
+       - main
+    paths:
+       - .github/workflows/main.yml
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+             fetch-depth: 0
+    - name: Install AWS CLI
+      run: |
+             curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+             unzip awscliv2.zip
+             sudo ./aws/install --update
+    - name: Configure AWS credentials
+      run: |
+             aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+             aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+             aws configure set default.region ${{ secrets.AWS_REGION }}
+    - name: Set variables
+      run: |
+             echo "VERSION=V001" >> $GITHUB_ENV
+    - name: Check if folder exists
+      id: check_folder
+      run: |
+            if aws --endpoint-url=https://kr.object.ncloudstorage.com s3api head-object --bucket  cbheo --key ${VERSION}/; then
+            echo "::set-output name=folder_exists::true"
+            else
+            echo "::set-output name=folder_exists::false"
+            fi
+    - name: Create folder in S3 bucket
+      run: |
+            if [[ "${{ steps.check_folder.outputs.folder_exists }}" != "true" ]]; then
+            aws --endpoint-url=https://kr.object.ncloudstorage.com s3api put-object --bucket  cbheo --key ${VERSION}/
+            fi
+    - name: Upload files to S3
+      run: |
+            aws --endpoint-url=https://kr.object.ncloudstorage.com s3 cp . s3:// cbheo/${{ env.VERSION }} --recursive --exclude "*" --include "*.html" --include "*.css" --include "*.js" --exclude ".github/*" --exclude "aws/*
